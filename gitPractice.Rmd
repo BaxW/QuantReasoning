@@ -9,3 +9,23 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+
+here is how I put this rmd file in a new repository in github
+```{bash}
+cd ~/Desktop/IntroQuant/
+
+git init
+
+git add gitPractice.Rmd 
+
+git commit -m test
+
+# went online and made new repositiory in my github
+
+git remote add origin https://github.com/BaxW/QuantReasoning.git
+
+git push -u origin master
+```
+
+
+
