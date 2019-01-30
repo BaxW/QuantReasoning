@@ -1,0 +1,137 @@
+---
+title: "Problemset2"
+author: "Baxter Worthing"
+date: "1/27/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Question 1
+
+$$N_t = N_0(e^{rt})$$
+plugging in values:
+
+$$2 = 1(e^{r109})$$
+therefore:
+$$\frac{\ln(2)}{109} = r$$
+plug in r and number of cells and solve for days (x):
+
+$$10^{12}=e^\frac{\ln(2)x}{109}$$
+following same logic as above:
+
+$$x = \frac{\ln(10^{12})}{\frac{\ln(2)}{109}} $$
+calculate the number of days at which the cancer becomes lethal:
+
+```{r}
+log(10^12)/(log(2)/109)
+```
+
+### Question 2
+
+$$\ 0 =b \frac{\ N}{\ N + M}d$$
+ can simplify to:
+
+$$dM = N(b-d)$$
+ solve for N hat:
+ 
+ $$N = \frac{dM}{(b-d)}$$
+
+derivative:
+
+$$\frac{bM}{\ (N + M)^2}$$
+
+plugging in N hat:
+
+$$\frac{bM}{\ (\frac{dM}{b-d} + M)^2}$$
+
+so therefore:
+
+$$\frac{bM}{\ (\frac{bM}{b-d})^2}$$
+ 
+I can simplify this to:
+
+$$\frac{(b-d)^2}{bM}$$
+
+So, there is a stable equilibrium point when the above is <0, but for this to be the case you would need a negative value for b or M, which is not going to happen in real life (can't have negative births, can't have negative males).
+There is also an equilibrium point when N=0 because there will be no change in the population size if there are no females to mate with 
+The implication of this is that there is no value of N that will remain constant in time unless the population goes extinct. 
+SO, the persistance population is inherently depenedent on the number of males in the population, and when that number is too low, the growth rate of the population goes negative and cannot rebound. This relates to the Allee effect becasue that point represents the Allee threshold, which is the minimum value of N below which extinction cannot be avoided due to a positive correlation between population density and per capita growth rate.
+ 
+
+
+### Question 3
+
+```{r}
+require(deSolve)
+## Loading required package: deSolve
+# Initial values
+
+Nvals <- seq(1,100)
+for (i in Nvals) {
+
+state <- c(N=i)
+times <- seq(0,100,by=0.1)
+
+# Parameters
+parameters <- c(b = 2.4,c=0.02,M=50,d=0.2)
+
+# Model
+sterile_insect <- function(t,state,parameters){
+  with(as.list(c(state,parameters)),{
+       dN <- b*N/(N+M) - d - c*N
+      list(c(dN))   
+  })}
+
+# Solve model and check if given N is equilibrium point
+out <- ode(y = state,times=times,func=sterile_insect,parms=parameters)
+
+if (out[nrow(out),2] == out[1,2] ) {
+  cat(state, "is equilibrium point", sep = "\n")
+  
+
+}
+
+}
+
+```
+
+So, based on the above code, I know the equilibrium points are 10 and 50. 
+
+now to plot N vs dN/dt
+
+
+ggplot way
+
+```{r}
+# set parameters
+b <- 2.4
+c <- 0.02
+M <- 50
+d <- 0.2
+
+# I will have graph go to N=75
+x <- data_frame(N=1:75)
+
+
+# need to save model to give to ggplot
+modl <- function(x) {b*x/(x+M)-d-c*x}
+
+# need to give ggplot values for the points 
+
+points <- tibble(x= c(0,10,50), y = modl(x), stability= as.factor(c("stable","unstable","stable")))
+
+
+ #after spending wayyyy too long trying to figure out the best way to do this with ggplot...
+ #plot the function curve first and then add equilibrium points, which are set to closed or open based on shape not fill
+ 
+ 
+ggplot(x,aes(x=N)) +
+  stat_function(fun = modl) +
+  labs(y ="dN/dt") +
+  geom_point(points, mapping=aes(x=x,y=y, shape=stability), size = 3) +
+    scale_shape_manual(values = c(16,1,1))
+```
+
