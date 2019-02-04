@@ -1,0 +1,16 @@
+---
+title: "Structured Population Models"
+author: "Anoob Prakash"
+date: "30 January 2019"
+output: html_document
+---
+
+```{r}
+load("COMPADRE_v.4.0.1.RData")
+ls(compadre)
+head(compadre$metadata)
+```
+
+#### Species: *Centaurea horrida*
+
+This is an endagered species according to the IUCN Red List, with two extant population's in Sardinia with about total recorded population size < 12,000. These species posses limited ability to disperse as well as colonize, leading to their limited range. Eventhough it's population is at present stable, it's low population size and limited range puts it under risk of going extinction in case of some drastic changes in the surrounding environment. We would like to see if the species would go extinct in the near future or not. The genus is also of particular interest for the Keller Lab. 
