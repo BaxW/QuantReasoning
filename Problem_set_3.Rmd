@@ -1,14 +1,15 @@
 ---
 title: "Structured Population Models"
-author: "Anoob Prakash"
+author: "Anoob Prakash & Baxter Worthing"
 date: "30 January 2019"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r}
 load("COMPADRE_v.4.0.1.RData")
-ls(compadre)
-head(compadre$metadata)
+
 ```
 
 #### Species: *Centaurea horrida*
@@ -58,7 +59,7 @@ eigen.analysis(mat1)[3]
 ```
 It looks like the survival rate of the oldest individuals (bottom right value) is the most sensitive parameter
 
-attempt to plot this population through time:
+Attempt to plot this population through time:
 ```{r}
 # fuction to find population matrix for given year (t)
 modl <- function(L,I,t) {
@@ -100,24 +101,83 @@ ggplot(out, aes(x=t, y= N)) +
 
 ```
 
-plot each age class? over time
+plot each age class over time
 
 ```{r}
-#t column needs to be each time repeated 5 times, N needs to be length tVals*5 and new column class needs to be 1-5 over and over again
-# make the t column within the loop
+
 
 size <- length(tVals)*5
-out2 <- data_frame(t= 1:size, N = 1:size, class = rep(1:5,length(tVals)))
+out2 <- data_frame(t= 1:size, N = 1:size, class = factor(rep(1:5,length(tVals))))
 countr <- 0
 for (i in 1:length(tVals)) {
   r1 <- countr + i
   r2 <- (countr + i)+4
 out2[r1:r2 , 2] <- modl(mat1,input,tVals[i])
-#still need to make t column
-#out2[i:]
+# finally make t column
+out2[r1:r2, 1] <- rep(i,5)
 countr <- countr + 4
 }
+
+ggplot(out2, aes(x=t, y= N, color=class)) +
+  geom_line() +
+  scale_color_discrete()
 ```
 
-#what would happen if you raised a bunch of plants to the oldest age class in a greenhouse and then released them?
-# what about the timing of the realease 
+can we find a survival rate for age class 5 that will get the eigenvalue to 1?
+
+
+```{r}
+r8s <- seq(.8509,1.0000,.0005)
+evals <- data_frame(rate = r8s, eigenvalue = 1:length(r8s))
+for (i in 1:length(r8s)) {
+  mat <- mat1
+  mat[5,5] <- r8s[i]
+  evals[i,1] <- r8s[i]
+  evals[i,2] <- eigen.analysis(mat)[1]
+}
+
+filter(evals, eigenvalue >= 1)
+```
+
+
+So, conservationists would need to get the survival rate of the 5th age class up to .983 to even out this population's projected decine
+
+
+plotting age classes over time with this new survival rate 
+```{r}
+
+# update matrix
+mat2 <- mat1
+mat2[5,5] <- 0.983
+
+
+#same as above but now using mat2  rather than mat1
+
+size <- length(tVals)*5
+out2 <- data_frame(t= 1:size, N = 1:size, class = factor(rep(1:5,length(tVals))))
+countr <- 0
+for (i in 1:length(tVals)) {
+  r1 <- countr + i
+  r2 <- (countr + i)+4
+out2[r1:r2 , 2] <- modl(mat2,input,tVals[i])
+# finally make t column
+out2[r1:r2, 1] <- rep(i,5)
+countr <- countr + 4
+}
+
+ggplot(out2, aes(x=t, y= N, color=class)) +
+  geom_line() +
+  scale_color_discrete()
+
+
+
+```
+
+*Centaurea horrida* is a species that eventhough listed by IUCN as stable at present, have high probability of going extinct due to its limited range and distribution. From the analysis, it is clear that the species is facing exponential decay ($\lambda \leq 1$) over a relatively short time period.  
+
+Farris *et al.* (2009) observed that low-intensity agro–sylvo–pastoral activies are beneficial to the conservation of this species along the rocky cliff's (natural habitat) of Sardinia, Italy. In light of our findings, if these efforts were aimed towards the conservation of the most sensitive age class, it would greatly assist in raising its eigen value $\geq$ 1 (exponential growth). 
+
+***  
+
+**References**  
+[Farris, E., Pisanu, S., Ceccherelli, G., and Filigheddu. R. 2009. Effects of the management regime on the performance of the endangered Mediterranean Centaurea horrida Badarò (Asteraceae). Journal for Nature Conservation, 17(1): 15-24.](https://www.sciencedirect.com/science/article/pii/S1617138108000472)
